@@ -222,6 +222,15 @@
         }];
         let conversations = []; // 存储所有对话历史
         let messageCounter = 0; // 消息计数器
+        // === 思考中... 动画 ===
+function startThinkingAnimation(el) {
+    let dots = 0;
+    return setInterval(() => {
+        dots = (dots + 1) % 4;
+        el.innerHTML = '思考中' + '.'.repeat(dots);
+    }, 500);
+}
+
 
         // 从localStorage加载历史记录
         function loadHistory() {
@@ -399,7 +408,9 @@
             messageInput.value = '';
             sendBtn.disabled = true;
 
-            const aiDiv = addMessageToUI('ai', '思考中...');
+           const aiDiv = addMessageToUI('ai', '思考中');
+           const thinkingTimer = startThinkingAnimation(aiDiv.querySelector('div'));
+
             let fullAIResponse = "";
             chatHistory.push({ role: "user", content: content });
 
@@ -440,6 +451,7 @@
                             try {
                                 const data = JSON.parse(dataStr);
                                 const delta = data.choices[0].delta.content || "";
+                                clearInterval(thinkingTimer);
                                 fullAIResponse += delta;
                                 aiDiv.querySelector('div').innerHTML = formatMathText(fullAIResponse);
                                 chatContainer.scrollTop = chatContainer.scrollHeight;
