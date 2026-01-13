@@ -1,8 +1,8 @@
 {
-  "name": "math-ai-netlify",
+  "name": "math-ai",
   "version": "1.0.0",
-  "private": true,
+  "description": "数学核心素养AI - 优化版",
   "dependencies": {
-    "node-fetch": "^2.6.9"
+    "node-fetch": "^2.6.7"
   }
 }
