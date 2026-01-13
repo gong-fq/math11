@@ -2,10 +2,27 @@
 const fetch = require('node-fetch');
 
 exports.handler = async (event, context) => {
+  // 设置 CORS 头
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+  };
+
+  // 处理 OPTIONS 预检请求
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers,
+      body: ''
+    };
+  }
+
   // 只允许 POST 请求
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
+      headers,
       body: JSON.stringify({ error: 'Method not allowed' })
     };
   }
@@ -19,11 +36,12 @@ exports.handler = async (event, context) => {
     if (!API_KEY) {
       return {
         statusCode: 500,
+        headers,
         body: JSON.stringify({ error: '服务器配置错误：未设置 API 密钥' })
       };
     }
 
-    // 调用 DeepSeek API
+    // 调用 DeepSeek API - 非流式版本（更稳定）
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -35,7 +53,7 @@ exports.handler = async (event, context) => {
         messages: messages,
         max_tokens: max_tokens,
         temperature: temperature,
-        stream: true
+        stream: false  // 使用非流式响应
       })
     });
 
@@ -44,25 +62,28 @@ exports.handler = async (event, context) => {
       console.error('DeepSeek API 错误:', errorText);
       return {
         statusCode: response.status,
+        headers,
         body: JSON.stringify({ error: 'DeepSeek API 调用失败', details: errorText })
       };
     }
 
-    // 返回流式响应
+    const data = await response.json();
+
+    // 返回完整响应
     return {
       statusCode: 200,
       headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive'
+        ...headers,
+        'Content-Type': 'application/json'
       },
-      body: response.body
+      body: JSON.stringify(data)
     };
 
   } catch (error) {
     console.error('Function 错误:', error);
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({ error: '服务器内部错误', message: error.message })
     };
   }
