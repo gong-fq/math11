@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>数学核心素养AI - 完美行列式版</title>
+    <title>数学核心素养AI</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -12,11 +12,7 @@
             tex: {
                 inlineMath: [['$', '$']],
                 displayMath: [['$$', '$$']],
-                processEscapes: true,
-                macros: {
-                    ddet: ["\\begin{vmatrix} #1 \\end{vmatrix}", 1],
-                    ppmat: ["\\begin{pmatrix} #1 \\end{pmatrix}", 1]
-                }
+                processEscapes: true
             },
             options: {
                 skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
@@ -24,7 +20,6 @@
         };
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script src="https://www.desmos.com/api/v1.9/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
@@ -32,7 +27,7 @@
         
         .container { 
             display: flex; 
-            flex-direction: row; 
+            flex-direction: column; 
             flex: 1; 
             width: 100%;
             height: 100vh;
@@ -41,175 +36,153 @@
             overflow: hidden; 
         }
 
-        .left-panel { 
-            flex: 0 0 280px; 
+        .header { 
             background: linear-gradient(135deg, #1a2980, #26d0ce); 
-            border-radius: 20px; 
-            padding: 25px; 
+            border-radius: 15px; 
+            padding: 20px; 
             color: white; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
-        .right-panel { 
+        .chat-container { 
             flex: 1; 
+            background: white; 
+            border-radius: 15px; 
+            padding: 20px; 
+            overflow-y: auto; 
             display: flex; 
             flex-direction: column; 
+            gap: 15px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .message { 
+            max-width: 85%; 
+            padding: 15px; 
+            border-radius: 15px; 
+            line-height: 1.6; 
+            word-wrap: break-word; 
+        }
+        
+        .ai-message { 
+            align-self: flex-start; 
+            background: #f0f7ff; 
+            border-left: 4px solid #1a2980; 
+        }
+        
+        .user-message { 
+            align-self: flex-end; 
+            background: linear-gradient(135deg, #1a2980, #26d0ce); 
+            color: white; 
+        }
+
+        .input-area { 
             background: white; 
-            border-radius: 20px; 
-            overflow: hidden; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+            border-radius: 15px; 
+            padding: 15px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
-
-        .chat-container { flex: 1; padding: 25px; overflow-y: auto; background-color: #fafbfd; display: flex; flex-direction: column; gap: 20px; }
-        .message { max-width: 85%; padding: 15px 20px; border-radius: 18px; line-height: 1.7; word-wrap: break-word; position: relative; }
-        .ai-message { align-self: flex-start; background: white; border: 1px solid #e1f0ff; }
-        .user-message { align-self: flex-end; background: linear-gradient(135deg, #1a2980, #26d0ce); color: white; }
-
-        .delete-btn {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: rgba(255, 0, 0, 0.7);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            cursor: pointer;
-            font-size: 12px;
-            display: none;
-            transition: background 0.2s;
+        
+        .input-container { 
+            display: flex; 
+            gap: 10px; 
         }
-        .message:hover .delete-btn { display: block; }
-        .delete-btn:hover { background: rgba(255, 0, 0, 0.9); }
-
-        .mjx-container { margin: 1.2em 0 !important; font-size: 1.1em !important; display: block !important; text-align: center; max-width: 100%; overflow-x: auto; }
-
-        #desmos-container { height: 320px; border-top: 1px solid #eee; display: none; }
-        .tool-bar { padding: 10px 20px; background: #f8f9fa; border-top: 1px solid #eee; display: flex; gap: 10px; }
-        .tool-btn { font-size: 12px; padding: 6px 15px; border-radius: 20px; border: 1px solid #1a2980; color: #1a2980; cursor: pointer; background: white; transition: all 0.2s; }
-        .tool-btn:hover { background: #1a2980; color: white; }
-        .tool-btn.danger { border-color: #dc3545; color: #dc3545; }
-        .tool-btn.danger:hover { background: #dc3545; color: white; }
-
-        .input-area { padding: 20px; border-top: 1px solid #eee; }
-        .input-container { display: flex; gap: 12px; align-items: flex-end; }
-        .input-box { flex: 1; border: 1px solid #ddd; border-radius: 12px; padding: 12px; font-size: 15px; resize: none; min-height: 50px; max-height: 150px; }
-        .send-btn { background: #1a2980; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; cursor: pointer; flex-shrink: 0; transition: opacity 0.2s; }
-        .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .history-section {
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        
+        .input-box { 
+            flex: 1; 
+            border: 1px solid #ddd; 
+            border-radius: 10px; 
+            padding: 12px; 
+            font-size: 14px; 
+            resize: none; 
+            min-height: 50px; 
         }
-        .history-title {
-            font-size: 14px;
+        
+        .send-btn { 
+            background: linear-gradient(135deg, #1a2980, #26d0ce); 
+            color: white; 
+            border: none; 
+            border-radius: 10px; 
+            padding: 0 20px; 
+            cursor: pointer; 
             font-weight: bold;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
-        .history-list {
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        .history-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 8px 12px;
-            margin-bottom: 8px;
-            border-radius: 8px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: background 0.2s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .history-item:hover { background: rgba(255, 255, 255, 0.2); }
-        .history-item-delete {
-            color: rgba(255, 100, 100, 0.8);
-            cursor: pointer;
-            padding: 2px 6px;
-            border-radius: 4px;
-            transition: all 0.2s;
-        }
-        .history-item-delete:hover {
-            background: rgba(255, 100, 100, 0.3);
-            color: white;
+        
+        .send-btn:disabled { 
+            opacity: 0.5; 
+            cursor: not-allowed; 
         }
 
-        /* 加载动画 */
-        @keyframes typing {
-            0%, 100% { content: '思考中'; }
-            33% { content: '思考中.'; }
-            66% { content: '思考中..'; }
+        .error-box {
+            background: #ffebee;
+            border: 1px solid #f44336;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            color: #d32f2f;
         }
-        .typing::after {
-            content: '思考中';
-            animation: typing 1.5s infinite;
+        
+        .error-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .solution-list {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+        
+        .solution-list li {
+            margin-bottom: 5px;
+        }
+        
+        .typing {
+            color: #666;
+            font-style: italic;
+        }
+        
+        .success {
+            color: #4caf50;
+            background: #e8f5e9;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="left-panel">
-            <h1 style="font-size: 20px; margin-bottom: 8px;">数学核心素养AI</h1>
-            <p style="font-size: 12px; opacity: 0.8;">龚凤乾教授设计</p>
-            <hr style="margin: 15px 0; opacity: 0.2;">
-            
-            <div style="font-size: 13px; line-height: 1.6;">
-                <p style="font-weight: bold; margin-bottom: 12px;"><i class="fas fa-info-circle"></i> 使用说明:</p>
-                <ul style="padding-left: 18px; opacity: 0.9;">
-                    <li style="margin-bottom: 12px;"><strong>智能问答:</strong>在下方输入框描述数学问题,支持代数、几何及线代。</li>
-                    <li style="margin-bottom: 12px;"><strong>完美公式:</strong>深度优化渲染,精准展示克莱姆法则等复杂行列式。</li>
-                    <li style="margin-bottom: 12px;"><strong>动态绘图:</strong>AI自动识别函数并调用Desmos可视化。</li>
-                    <li style="margin-bottom: 12px;"><strong>历史记录:</strong>查看和管理聊天历史,支持删除功能。</li>
-                </ul>
-                <div style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 8px; font-size: 11px;">
-                    <strong>✅ 已优化:</strong><br>
-                    • API密钥安全保护<br>
-                    • 响应速度提升<br>
-                    • 稳定的数据传输
-                </div>
-            </div>
-
-            <div class="history-section">
-                <div class="history-title">
-                    <span><i class="fas fa-history"></i> 聊天历史</span>
-                    <span style="font-size: 11px; cursor: pointer; opacity: 0.7;" id="clearAllHistory" title="清空所有历史">
-                        <i class="fas fa-trash"></i>
-                    </span>
-                </div>
-                <div class="history-list" id="historyList"></div>
-            </div>
-            
-            <div style="margin-top: auto;">
-                <hr style="margin: 15px 0; opacity: 0.2;">
-                <p style="font-size: 12px; opacity: 0.7;">提示:若遇到显示异常,请刷新页面或检查网络连接。</p>
-            </div>
+        <div class="header">
+            <h1 style="margin-bottom: 5px;">数学核心素养AI</h1>
+            <p style="opacity: 0.9; font-size: 14px;">龚凤乾教授设计 | 简化稳定版</p>
         </div>
 
-        <div class="right-panel">
-            <div class="chat-container" id="chatContainer">
-                <div class="message ai-message">您好!我是数学助学AI。已优化响应速度并加强安全保护。请问有什么数学问题我可以帮您?</div>
+        <div class="chat-container" id="chatContainer">
+            <div class="message ai-message">
+                <strong>数学助学AI已就绪</strong><br><br>
+                我已优化为简化稳定版本，专注于数学问题解答。<br>
+                请直接在下方输入您的数学问题。
             </div>
+            
+            <!-- 测试连接区域 -->
+            <div id="testResult"></div>
+        </div>
 
-            <div id="desmos-container"></div>
-            <div class="tool-bar">
-                <button class="tool-btn" id="toggleDesmos"><i class="fas fa-chart-line"></i> 开启/关闭 Desmos 图形</button>
-                <button class="tool-btn danger" id="clearChat"><i class="fas fa-broom"></i> 清空对话</button>
+        <div class="input-area">
+            <div class="input-container">
+                <textarea class="input-box" id="messageInput" 
+                    placeholder="请输入数学问题，例如：求解方程 x² + 2x - 3 = 0..."></textarea>
+                <button class="send-btn" id="sendBtn">发送</button>
             </div>
-
-            <div class="input-area">
-                <div class="input-container">
-                    <textarea class="input-box" id="messageInput" placeholder="输入数学问题...按Enter发送,Shift+Enter换行"></textarea>
-                    <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
-                </div>
+            <div style="margin-top: 10px; text-align: center;">
+                <button id="testBtn" style="background: #4caf50; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
+                    <i class="fas fa-wifi"></i> 测试API连接
+                </button>
+                <span style="margin-left: 10px; font-size: 12px; color: #666;">使用前请先测试连接</span>
             </div>
         </div>
     </div>
@@ -218,173 +191,203 @@
         const chatContainer = document.getElementById('chatContainer');
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
-        const desmosEl = document.getElementById('desmos-container');
-        let calculator = null;
-        let messageCounter = 0;
-
-        // ⚡ 使用简化版 Netlify Function
-        const API_URL = "/.netlify/functions/deepseek-simple";
-
-        // 系统提示词
+        const testBtn = document.getElementById('testBtn');
+        
+        // 使用正确的函数路径
+        const API_URL = "/.netlify/functions/deepseek";
+        
         let chatHistory = [{
             role: "system",
-            content: "你是数学助学AI,简洁清晰回答数学问题。公式用LaTeX,如 $x^2$ 或 $$\\int_0^1 x dx$$。绘图用 [GRAPH: y=x^2]。"
+            content: "你是数学助学AI，请用简洁清晰的语言回答数学问题。公式用LaTeX格式，如 $x^2$ 或 $$\\int_0^1 x dx$$。"
         }];
-
-        // 历史记录管理
-        let conversationHistory = JSON.parse(localStorage.getItem('mathAIHistory') || '[]');
-
-        function saveCurrentConversation(userMsg, aiMsg) {
-            const timestamp = new Date().toLocaleString('zh-CN');
-            conversationHistory.unshift({
-                id: Date.now(),
-                timestamp,
-                userMsg: userMsg.substring(0, 50),
-                fullChat: chatHistory.slice(1)
-            });
-            if (conversationHistory.length > 20) conversationHistory = conversationHistory.slice(0, 20);
-            localStorage.setItem('mathAIHistory', JSON.stringify(conversationHistory));
-            updateHistoryUI();
-        }
-
-        function updateHistoryUI() {
-            const historyList = document.getElementById('historyList');
-            historyList.innerHTML = conversationHistory.map(item => `
-                <div class="history-item" data-id="${item.id}">
-                    <span>${item.timestamp} - ${item.userMsg}...</span>
-                    <span class="history-item-delete" onclick="deleteHistory(${item.id}, event)">
-                        <i class="fas fa-trash-alt"></i>
-                    </span>
-                </div>
-            `).join('');
-
-            document.querySelectorAll('.history-item').forEach(item => {
-                item.addEventListener('click', function(e) {
-                    if (e.target.closest('.history-item-delete')) return;
-                    const id = parseInt(this.getAttribute('data-id'));
-                    loadConversation(id);
-                });
-            });
-        }
-
-        function loadConversation(id) {
-            const conv = conversationHistory.find(c => c.id === id);
-            if (!conv) return;
-
-            chatHistory = [chatHistory[0], ...conv.fullChat];
-            chatContainer.innerHTML = '<div class="message ai-message">已加载历史对话</div>';
+        
+        // 添加消息到界面
+        function addMessage(role, content, isError = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}-message`;
             
-            conv.fullChat.forEach(msg => {
-                addMessageToUI(msg.role === 'user' ? 'user' : 'ai', msg.content);
-            });
-        }
-
-        function deleteHistory(id, event) {
-            event.stopPropagation();
-            if (confirm('确定要删除这条历史记录吗?')) {
-                conversationHistory = conversationHistory.filter(c => c.id !== id);
-                localStorage.setItem('mathAIHistory', JSON.stringify(conversationHistory));
-                updateHistoryUI();
-            }
-        }
-
-        function loadHistory() {
-            updateHistoryUI();
-        }
-
-        document.getElementById('clearAllHistory').onclick = () => {
-            if (confirm('确定要清空所有历史记录吗?')) {
-                conversationHistory = [];
-                localStorage.removeItem('mathAIHistory');
-                updateHistoryUI();
-            }
-        };
-
-        document.getElementById('clearChat').onclick = () => {
-            if (confirm('确定要清空当前对话吗?')) {
-                chatHistory = [chatHistory[0]];
-                chatContainer.innerHTML = '<div class="message ai-message">对话已清空。请问有什么数学问题我可以帮您?</div>';
-            }
-        };
-
-        document.getElementById('toggleDesmos').onclick = () => {
-            const show = desmosEl.style.display === 'none' || desmosEl.style.display === '';
-            desmosEl.style.display = show ? 'block' : 'none';
-            if (show && !calculator) {
-                calculator = Desmos.GraphingCalculator(desmosEl, { expressions: true, settingsMenu: false });
-            }
-        };
-
-        function autoDrawFunction(text) {
-            const graphMatch = text.match(/\[GRAPH:\s*(.+?)\]/);
-            if (graphMatch) {
-                const expr = graphMatch[1].trim();
-                if (!calculator) {
-                    desmosEl.style.display = 'block';
-                    calculator = Desmos.GraphingCalculator(desmosEl, { expressions: true, settingsMenu: false });
-                }
-                try {
-                    calculator.setExpression({ latex: expr });
-                } catch (e) {
-                    console.error('Desmos绘图错误:', e);
-                }
-            }
-        }
-
-        function formatMathText(text) {
-            let formatted = text.replace(/\\\\/g, '\\\\\\\\');
-            return marked.parse(formatted);
-        }
-
-        function addMessageToUI(role, text, enableDelete = true) {
-            const div = document.createElement('div');
-            div.className = `message ${role}-message`;
-            div.setAttribute('data-id', messageCounter++);
-            
-            if (enableDelete) {
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'delete-btn';
-                deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
-                deleteBtn.onclick = () => deleteMessage(div);
-                div.appendChild(deleteBtn);
+            if (isError) {
+                messageDiv.innerHTML = `<div class="error-box">${content}</div>`;
+            } else {
+                messageDiv.textContent = content;
             }
             
-            const contentDiv = document.createElement('div');
-            contentDiv.innerHTML = role === 'ai' ? formatMathText(text) : text;
-            div.appendChild(contentDiv);
-            
-            chatContainer.appendChild(div);
+            chatContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
             
-            if (window.MathJax && role === 'ai') {
-                MathJax.typesetPromise([contentDiv]).then(() => {
-                    autoDrawFunction(text);
-                });
+            // 如果是AI消息且包含数学公式，重新渲染MathJax
+            if (role === 'ai' && !isError && window.MathJax) {
+                setTimeout(() => {
+                    MathJax.typesetPromise([messageDiv]);
+                }, 100);
             }
+        }
+        
+        // 测试连接
+        async function testConnection() {
+            testBtn.disabled = true;
+            testBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 测试中...';
             
-            return div;
-        }
-
-        function deleteMessage(msgElement) {
-            if (confirm('确定要删除这条消息吗?')) {
-                msgElement.remove();
+            const testResult = document.getElementById('testResult');
+            testResult.innerHTML = '<div class="message ai-message"><span class="typing">测试服务器连接中...</span></div>';
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        messages: [{ role: "user", content: "Hello" }],
+                        max_tokens: 10
+                    })
+                });
+                
+                const responseText = await response.text();
+                console.log('测试响应:', response.status, responseText);
+                
+                let resultHtml;
+                
+                if (response.ok) {
+                    try {
+                        const data = JSON.parse(responseText);
+                        if (data.success) {
+                            resultHtml = `
+                                <div class="message ai-message">
+                                    <div class="success">
+                                        <i class="fas fa-check-circle"></i> 
+                                        <strong>连接成功！</strong><br>
+                                        服务器状态正常，可以开始使用。
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            throw new Error(data.error || '未知错误');
+                        }
+                    } catch (e) {
+                        resultHtml = `
+                            <div class="message ai-message">
+                                <div class="error-box">
+                                    <div class="error-title">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        响应格式错误
+                                    </div>
+                                    服务器返回了非标准响应。<br>
+                                    响应内容：${responseText.substring(0, 100)}
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    let errorInfo = '未知错误';
+                    try {
+                        const errorData = JSON.parse(responseText);
+                        errorInfo = errorData.error || errorData.details || errorData.message || '无错误详情';
+                    } catch (e) {
+                        errorInfo = responseText || '无错误详情';
+                    }
+                    
+                    if (response.status === 403) {
+                        resultHtml = `
+                            <div class="message ai-message">
+                                <div class="error-box">
+                                    <div class="error-title">
+                                        <i class="fas fa-key"></i>
+                                        API 密钥错误 (403)
+                                    </div>
+                                    <strong>问题：</strong>DeepSeek API 密钥验证失败<br><br>
+                                    <strong>解决方案：</strong>
+                                    <ul class="solution-list">
+                                        <li>检查 Netlify 环境变量 DEEPSEEK_API_KEY 是否正确设置</li>
+                                        <li>确保 API 密钥有足够的余额</li>
+                                        <li>确认 API 密钥没有被禁用</li>
+                                        <li>如果是新生成的密钥，请等待几分钟后重试</li>
+                                    </ul>
+                                    <br>
+                                    <strong>错误详情：</strong><br>
+                                    <code>${errorInfo}</code>
+                                </div>
+                            </div>
+                        `;
+                    } else if (response.status === 404) {
+                        resultHtml = `
+                            <div class="message ai-message">
+                                <div class="error-box">
+                                    <div class="error-title">
+                                        <i class="fas fa-unlink"></i>
+                                        函数未找到 (404)
+                                    </div>
+                                    Netlify Function 未正确部署。<br><br>
+                                    <strong>请检查：</strong>
+                                    <ul class="solution-list">
+                                        <li>确保项目已正确部署到 Netlify</li>
+                                        <li>检查函数文件路径是否正确</li>
+                                        <li>查看 Netlify 部署日志</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        resultHtml = `
+                            <div class="message ai-message">
+                                <div class="error-box">
+                                    <div class="error-title">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        连接失败 (HTTP ${response.status})
+                                    </div>
+                                    <strong>错误信息：</strong> ${errorInfo}<br><br>
+                                    请检查网络连接和服务器状态。
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                
+                testResult.innerHTML = resultHtml;
+                
+            } catch (error) {
+                console.error('测试连接错误:', error);
+                testResult.innerHTML = `
+                    <div class="message ai-message">
+                        <div class="error-box">
+                            <div class="error-title">
+                                <i class="fas fa-unplug"></i>
+                                网络连接错误
+                            </div>
+                            <strong>错误：</strong> ${error.message}<br><br>
+                            <strong>可能原因：</strong>
+                            <ul class="solution-list">
+                                <li>网络连接不稳定</li>
+                                <li>Netlify Functions 未部署</li>
+                                <li>请求被浏览器安全策略阻止</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            } finally {
+                testBtn.disabled = false;
+                testBtn.innerHTML = '<i class="fas fa-wifi"></i> 测试API连接';
             }
         }
-
-        // 简化版发送逻辑 - 非流式响应
-        async function handleSend() {
+        
+        // 发送消息
+        async function sendMessage() {
             const content = messageInput.value.trim();
-            if (!content || sendBtn.disabled) return;
-
-            addMessageToUI('user', content);
+            if (!content) return;
+            
+            // 添加用户消息
+            addMessage('user', content);
             messageInput.value = '';
             sendBtn.disabled = true;
-
-            const aiDiv = addMessageToUI('ai', '');
-            aiDiv.querySelector('div').classList.add('typing');
             
+            // 添加AI思考中消息
+            const thinkingDiv = document.createElement('div');
+            thinkingDiv.className = 'message ai-message';
+            thinkingDiv.innerHTML = '<span class="typing">思考中...</span>';
+            chatContainer.appendChild(thinkingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // 添加到历史
             chatHistory.push({ role: "user", content: content });
-
+            
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
@@ -395,52 +398,75 @@
                         temperature: 0.7
                     })
                 });
-
+                
+                const responseText = await response.text();
+                
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `请求失败: ${response.status}`);
+                    throw new Error(`HTTP ${response.status}: ${responseText}`);
                 }
-
-                const data = await response.json();
+                
+                const data = JSON.parse(responseText);
+                
+                if (!data.choices || !data.choices[0]) {
+                    throw new Error('响应格式不正确');
+                }
+                
+                // 移除思考中消息
+                thinkingDiv.remove();
+                
+                // 添加AI回复
                 const aiResponse = data.choices[0].message.content;
-
-                aiDiv.querySelector('div').classList.remove('typing');
-                aiDiv.querySelector('div').innerHTML = formatMathText(aiResponse);
+                addMessage('ai', aiResponse);
                 
-                if (window.MathJax) {
-                    MathJax.typesetPromise([aiDiv.querySelector('div')]).then(() => {
-                        autoDrawFunction(aiResponse);
-                    });
+                // 添加到历史
+                chatHistory.push({ role: "assistant", content: aiResponse });
+                
+            } catch (error) {
+                console.error('发送消息错误:', error);
+                
+                // 移除思考中消息
+                thinkingDiv.remove();
+                
+                // 显示错误信息
+                let errorMessage = `抱歉，请求失败：${error.message}`;
+                if (error.message.includes('403')) {
+                    errorMessage = `
+                        <div class="error-box">
+                            <div class="error-title">
+                                <i class="fas fa-key"></i>
+                                API 密钥错误
+                            </div>
+                            请点击上方"测试API连接"按钮查看详细解决方案。
+                        </div>
+                    `;
                 }
                 
-                chatHistory.push({ role: "assistant", content: aiResponse });
-                saveCurrentConversation(content, aiResponse);
-
-            } catch (error) {
-                console.error('请求错误:', error);
+                addMessage('ai', errorMessage, true);
+                
+                // 从历史中移除失败的用户消息
                 chatHistory.pop();
-                
-                aiDiv.querySelector('div').classList.remove('typing');
-                let errorMsg = "抱歉,连接出现问题:<br><br>";
-                errorMsg += "• 请检查 Netlify Functions 是否正确部署<br>";
-                errorMsg += "• 确认环境变量 DEEPSEEK_API_KEY 已设置<br>";
-                errorMsg += "• 错误信息: " + error.message;
-                
-                aiDiv.querySelector('div').innerHTML = errorMsg;
             } finally {
                 sendBtn.disabled = false;
+                messageInput.focus();
             }
         }
-
-        sendBtn.onclick = handleSend;
+        
+        // 事件监听
+        sendBtn.addEventListener('click', sendMessage);
+        testBtn.addEventListener('click', testConnection);
+        
         messageInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                handleSend();
+                sendMessage();
             }
         });
-
-        loadHistory();
+        
+        // 页面加载后自动测试连接
+        window.addEventListener('load', () => {
+            console.log('页面加载完成，API URL:', API_URL);
+            setTimeout(testConnection, 500);
+        });
     </script>
 </body>
 </html>

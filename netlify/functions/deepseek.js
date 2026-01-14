@@ -1,4 +1,4 @@
-// netlify/functions/deepseek.js
+// netlify/functions/deepseek-simple.js
 const fetch = require('node-fetch');
 
 exports.handler = async (event, context) => {
@@ -41,7 +41,10 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // 调用 DeepSeek API - 非流式版本（更稳定）
+    // 简化版：更严格的错误处理和超时
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -53,38 +56,57 @@ exports.handler = async (event, context) => {
         messages: messages,
         max_tokens: max_tokens,
         temperature: temperature,
-        stream: false  // 使用非流式响应
-      })
+        stream: false
+      }),
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('DeepSeek API 错误:', errorText);
+      console.error('DeepSeek API 错误:', response.status, errorText);
       return {
         statusCode: response.status,
         headers,
-        body: JSON.stringify({ error: 'DeepSeek API 调用失败', details: errorText })
+        body: JSON.stringify({ 
+          error: 'API 调用失败',
+          status: response.status
+        })
       };
     }
 
     const data = await response.json();
 
-    // 返回完整响应
+    // 简化响应结构
     return {
       statusCode: 200,
       headers: {
         ...headers,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify({
+        success: true,
+        choices: data.choices,
+        usage: data.usage
+      })
     };
 
   } catch (error) {
-    console.error('Function 错误:', error);
+    console.error('Function 错误:', error.message);
+    
+    let errorMsg = '服务器内部错误';
+    if (error.name === 'AbortError') {
+      errorMsg = '请求超时，请稍后重试';
+    }
+    
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: '服务器内部错误', message: error.message })
+      body: JSON.stringify({ 
+        error: errorMsg,
+        message: error.message
+      })
     };
   }
 };
