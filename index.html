@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>数学核心素养AI</title>
+    <title>数学核心素养AI - 含 Desmos 绘图</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -20,6 +20,9 @@
         };
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <!-- Desmos API -->
+    <script src="https://www.desmos.com/api/v1.9/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
@@ -32,7 +35,7 @@
             width: 100%;
             height: 100vh;
             padding: 15px; 
-            gap: 20px; 
+            gap: 15px; 
             overflow: hidden; 
         }
 
@@ -41,20 +44,57 @@
             border-radius: 15px; 
             padding: 20px; 
             color: white; 
-            text-align: center;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-info h1 {
+            margin-bottom: 5px;
+            font-size: 24px;
+        }
+        
+        .header-info p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            gap: 15px;
+            overflow: hidden;
+        }
+        
+        .chat-section {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        
+        .graph-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            overflow: hidden;
+            min-width: 300px;
         }
 
         .chat-container { 
             flex: 1; 
-            background: white; 
-            border-radius: 15px; 
             padding: 20px; 
             overflow-y: auto; 
             display: flex; 
             flex-direction: column; 
             gap: 15px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
 
         .message { 
@@ -77,11 +117,65 @@
             color: white; 
         }
 
+        .graph-header {
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .graph-container {
+            flex: 1;
+            position: relative;
+            min-height: 300px;
+        }
+        
+        #desmos-calculator {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .graph-controls {
+            padding: 10px;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .graph-btn {
+            padding: 8px 15px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .graph-btn:hover {
+            background: #f0f7ff;
+            border-color: #1a2980;
+            color: #1a2980;
+        }
+        
+        .graph-btn.active {
+            background: #1a2980;
+            color: white;
+            border-color: #1a2980;
+        }
+
         .input-area { 
-            background: white; 
-            border-radius: 15px; 
             padding: 15px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
         }
         
         .input-container { 
@@ -96,7 +190,8 @@
             padding: 12px; 
             font-size: 14px; 
             resize: none; 
-            min-height: 50px; 
+            min-height: 60px; 
+            max-height: 150px;
         }
         
         .send-btn { 
@@ -104,9 +199,12 @@
             color: white; 
             border: none; 
             border-radius: 10px; 
-            padding: 0 20px; 
+            padding: 0 25px; 
             cursor: pointer; 
             font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .send-btn:disabled { 
@@ -152,54 +250,290 @@
             border-radius: 5px;
             margin-top: 10px;
         }
+        
+        .graph-prompt {
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+        
+        .graph-prompt strong {
+            color: #2e7d32;
+        }
+        
+        .latex-example {
+            background: #f5f5f5;
+            border-radius: 5px;
+            padding: 5px 8px;
+            font-family: monospace;
+            margin: 3px 0;
+            font-size: 12px;
+        }
+        
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .graph-section {
+                min-width: auto;
+                max-height: 300px;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1 style="margin-bottom: 5px;">数学核心素养AI</h1>
-            <p style="opacity: 0.9; font-size: 14px;">龚凤乾教授设计 | 简化稳定版</p>
+            <div class="header-info">
+                <h1>数学核心素养AI</h1>
+                <p>龚凤乾教授设计 | 含 Desmos 绘图功能</p>
+            </div>
+            <div>
+                <button id="testBtn" style="background: #4caf50; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                    <i class="fas fa-wifi"></i> 测试连接
+                </button>
+            </div>
         </div>
 
-        <div class="chat-container" id="chatContainer">
-            <div class="message ai-message">
-                <strong>数学助学AI已就绪</strong><br><br>
-                我已优化为简化稳定版本，专注于数学问题解答。<br>
-                请直接在下方输入您的数学问题。
+        <div class="main-content">
+            <div class="chat-section">
+                <div class="chat-container" id="chatContainer">
+                    <div class="message ai-message">
+                        <strong>数学助学AI已就绪</strong><br><br>
+                        我已集成Desmos绘图功能，支持以下数学可视化：<br><br>
+                        • 函数图像：$y = f(x)$<br>
+                        • 参数方程：$x(t), y(t)$<br>
+                        • 极坐标：$r(\theta)$<br>
+                        • 不等式：$y > x^2$<br>
+                        • 点与几何图形<br><br>
+                        直接在下方输入数学问题，AI会自动调用绘图功能。
+                    </div>
+                    
+                    <div id="testResult"></div>
+                </div>
+
+                <div class="input-area">
+                    <div class="input-container">
+                        <textarea class="input-box" id="messageInput" 
+                            placeholder="输入数学问题，例如：绘制函数 y = sin(x) 的图像，并分析其性质..."></textarea>
+                        <button class="send-btn" id="sendBtn">
+                            <i class="fas fa-paper-plane"></i> 发送
+                        </button>
+                    </div>
+                </div>
             </div>
             
-            <!-- 测试连接区域 -->
-            <div id="testResult"></div>
-        </div>
-
-        <div class="input-area">
-            <div class="input-container">
-                <textarea class="input-box" id="messageInput" 
-                    placeholder="请输入数学问题，例如：求解方程 x² + 2x - 3 = 0..."></textarea>
-                <button class="send-btn" id="sendBtn">发送</button>
-            </div>
-            <div style="margin-top: 10px; text-align: center;">
-                <button id="testBtn" style="background: #4caf50; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
-                    <i class="fas fa-wifi"></i> 测试API连接
-                </button>
-                <span style="margin-left: 10px; font-size: 12px; color: #666;">使用前请先测试连接</span>
+            <div class="graph-section">
+                <div class="graph-header">
+                    <h3><i class="fas fa-chart-line"></i> Desmos 绘图工具</h3>
+                    <div style="font-size: 12px; color: #666;">
+                        实时可视化数学函数
+                    </div>
+                </div>
+                
+                <div class="graph-container">
+                    <div id="desmos-calculator"></div>
+                    <div id="graph-placeholder" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; color: #666; background: #fafafa;">
+                        <i class="fas fa-chart-line" style="font-size: 48px; margin-bottom: 15px; opacity: 0.3;"></i>
+                        <h3 style="margin-bottom: 10px;">Desmos 图形计算器</h3>
+                        <p style="margin-bottom: 15px;">等待AI生成图形...</p>
+                        <div style="font-size: 12px; max-width: 250px;">
+                            支持函数、参数方程、不等式、点、几何图形等可视化
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="graph-controls">
+                    <button class="graph-btn" id="resetView">
+                        <i class="fas fa-expand"></i> 重置视图
+                    </button>
+                    <button class="graph-btn" id="zoomIn">
+                        <i class="fas fa-search-plus"></i> 放大
+                    </button>
+                    <button class="graph-btn" id="zoomOut">
+                        <i class="fas fa-search-minus"></i> 缩小
+                    </button>
+                    <button class="graph-btn" id="showGrid">
+                        <i class="fas fa-th"></i> 网格
+                    </button>
+                    <button class="graph-btn" id="darkMode">
+                        <i class="fas fa-moon"></i> 暗色主题
+                    </button>
+                    <button class="graph-btn" id="clearGraph">
+                        <i class="fas fa-trash"></i> 清空图形
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
+        // 核心变量
         const chatContainer = document.getElementById('chatContainer');
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
         const testBtn = document.getElementById('testBtn');
+        const graphPlaceholder = document.getElementById('graph-placeholder');
         
-        // 使用正确的函数路径
+        // Desmos 计算器实例
+        let calculator = null;
+        
+        // API 路径
         const API_URL = "/.netlify/functions/deepseek";
         
+        // 聊天历史
         let chatHistory = [{
             role: "system",
-            content: "你是数学助学AI，请用简洁清晰的语言回答数学问题。公式用LaTeX格式，如 $x^2$ 或 $$\\int_0^1 x dx$$。"
+            content: `你是数学助学AI，擅长使用公式和绘图解释数学概念。
+
+重要指令：
+1. 使用LaTeX格式显示数学公式，如 $x^2$ 或 $$\\int_0^1 x dx$$
+2. 当需要可视化时，生成Desmos图形代码
+3. 绘图代码格式：[GRAPH:表达式]，例如：
+   - [GRAPH: y = x^2]
+   - [GRAPH: x^2 + y^2 = 1]
+   - [GRAPH: y = sin(x), y = cos(x)]
+   - [GRAPH: x = cos(t), y = sin(t)]
+   - [GRAPH: y > x^2]
+4. 一次可以绘制多个表达式，用逗号分隔
+5. 解释图形时，说明关键特征（交点、极值、渐近线等）
+
+你应当主动为合适的数学问题提供图形可视化，特别是函数、方程、几何、微积分相关内容。`
         }];
+        
+        // 初始化 Desmos 计算器
+        function initDesmosCalculator() {
+            if (calculator) return calculator;
+            
+            const el = document.getElementById('desmos-calculator');
+            calculator = Desmos.GraphingCalculator(el, {
+                keypad: true,
+                graphpaper: true,
+                expressions: true,
+                settingsMenu: true,
+                zoomButtons: true,
+                colors: {
+                    grid: '#cccccc',
+                    background: '#ffffff'
+                },
+                xAxisLabel: 'x',
+                yAxisLabel: 'y',
+                xAxisStep: 1,
+                yAxisStep: 1,
+                xAxisArrowMode: 'POSITIVE',
+                yAxisArrowMode: 'POSITIVE'
+            });
+            
+            // 隐藏占位符
+            graphPlaceholder.style.display = 'none';
+            
+            // 设置默认视图
+            calculator.setMathBounds({
+                left: -10,
+                right: 10,
+                bottom: -10,
+                top: 10
+            });
+            
+            return calculator;
+        }
+        
+        // 绘制函数到 Desmos
+        function drawToDesmos(expression) {
+            if (!calculator) {
+                initDesmosCalculator();
+            }
+            
+            try {
+                // 清理之前的表达式（可选，这里我们保留历史）
+                // calculator.setExpressions([]);
+                
+                // 解析表达式（支持多个表达式，用逗号分隔）
+                const expressions = expression.split(',').map(expr => expr.trim());
+                
+                expressions.forEach((expr, index) => {
+                    // 处理常见函数格式
+                    let latex = expr.trim();
+                    
+                    // 添加等号如果缺失（对于函数）
+                    if (!latex.includes('=') && !latex.includes('<') && !latex.includes('>')) {
+                        // 可能是隐函数或参数方程
+                        if (latex.includes('(') && latex.includes(')')) {
+                            // 看起来像函数，添加 y =
+                            latex = `y = ${latex}`;
+                        }
+                    }
+                    
+                    // 添加到计算器
+                    calculator.setExpression({
+                        id: `graph${index}`,
+                        latex: latex,
+                        color: Desmos.Colors.BLUE
+                    });
+                });
+                
+                // 自动调整视图
+                calculator.setMathBounds(calculator.suggestedBounds());
+                
+                return true;
+            } catch (error) {
+                console.error('Desmos绘图错误:', error);
+                return false;
+            }
+        }
+        
+        // 从AI响应中提取图形代码
+        function extractGraphCode(text) {
+            // 匹配 [GRAPH: ...] 格式
+            const graphRegex = /\[GRAPH:\s*(.+?)\]/g;
+            const matches = [];
+            let match;
+            
+            while ((match = graphRegex.exec(text)) !== null) {
+                matches.push(match[1]);
+            }
+            
+            return matches;
+        }
+        
+        // 处理AI响应中的图形代码
+        function processGraphCode(text) {
+            const graphCodes = extractGraphCode(text);
+            
+            if (graphCodes.length > 0) {
+                // 移除占位符
+                graphPlaceholder.style.display = 'none';
+                
+                // 初始化计算器（如果尚未初始化）
+                if (!calculator) {
+                    initDesmosCalculator();
+                }
+                
+                // 清空之前的图形
+                calculator.setExpressions([]);
+                
+                // 绘制每个图形
+                graphCodes.forEach((code, index) => {
+                    drawToDesmos(code);
+                });
+                
+                // 返回移除图形代码的文本
+                return text.replace(/\[GRAPH:\s*(.+?)\]/g, '');
+            }
+            
+            return text;
+        }
         
         // 添加消息到界面
         function addMessage(role, content, isError = false) {
@@ -209,7 +543,9 @@
             if (isError) {
                 messageDiv.innerHTML = `<div class="error-box">${content}</div>`;
             } else {
-                messageDiv.textContent = content;
+                // 处理图形代码并显示
+                const processedContent = processGraphCode(content);
+                messageDiv.innerHTML = processedContent;
             }
             
             chatContainer.appendChild(messageDiv);
@@ -236,8 +572,8 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        messages: [{ role: "user", content: "Hello" }],
-                        max_tokens: 10
+                        messages: [{ role: "user", content: "测试连接，请回复'连接成功'" }],
+                        max_tokens: 20
                     })
                 });
                 
@@ -255,7 +591,7 @@
                                     <div class="success">
                                         <i class="fas fa-check-circle"></i> 
                                         <strong>连接成功！</strong><br>
-                                        服务器状态正常，可以开始使用。
+                                        服务器状态正常，Desmos绘图功能已就绪。
                                     </div>
                                 </div>
                             `;
@@ -270,8 +606,7 @@
                                         <i class="fas fa-exclamation-triangle"></i>
                                         响应格式错误
                                     </div>
-                                    服务器返回了非标准响应。<br>
-                                    响应内容：${responseText.substring(0, 100)}
+                                    服务器返回了非标准响应。
                                 </div>
                             </div>
                         `;
@@ -296,31 +631,9 @@
                                     <strong>问题：</strong>DeepSeek API 密钥验证失败<br><br>
                                     <strong>解决方案：</strong>
                                     <ul class="solution-list">
-                                        <li>检查 Netlify 环境变量 DEEPSEEK_API_KEY 是否正确设置</li>
+                                        <li>检查 Netlify 环境变量 DEEPSEEK_API_KEY</li>
                                         <li>确保 API 密钥有足够的余额</li>
                                         <li>确认 API 密钥没有被禁用</li>
-                                        <li>如果是新生成的密钥，请等待几分钟后重试</li>
-                                    </ul>
-                                    <br>
-                                    <strong>错误详情：</strong><br>
-                                    <code>${errorInfo}</code>
-                                </div>
-                            </div>
-                        `;
-                    } else if (response.status === 404) {
-                        resultHtml = `
-                            <div class="message ai-message">
-                                <div class="error-box">
-                                    <div class="error-title">
-                                        <i class="fas fa-unlink"></i>
-                                        函数未找到 (404)
-                                    </div>
-                                    Netlify Function 未正确部署。<br><br>
-                                    <strong>请检查：</strong>
-                                    <ul class="solution-list">
-                                        <li>确保项目已正确部署到 Netlify</li>
-                                        <li>检查函数文件路径是否正确</li>
-                                        <li>查看 Netlify 部署日志</li>
                                     </ul>
                                 </div>
                             </div>
@@ -333,8 +646,7 @@
                                         <i class="fas fa-exclamation-circle"></i>
                                         连接失败 (HTTP ${response.status})
                                     </div>
-                                    <strong>错误信息：</strong> ${errorInfo}<br><br>
-                                    请检查网络连接和服务器状态。
+                                    <strong>错误信息：</strong> ${errorInfo}
                                 </div>
                             </div>
                         `;
@@ -352,19 +664,13 @@
                                 <i class="fas fa-unplug"></i>
                                 网络连接错误
                             </div>
-                            <strong>错误：</strong> ${error.message}<br><br>
-                            <strong>可能原因：</strong>
-                            <ul class="solution-list">
-                                <li>网络连接不稳定</li>
-                                <li>Netlify Functions 未部署</li>
-                                <li>请求被浏览器安全策略阻止</li>
-                            </ul>
+                            <strong>错误：</strong> ${error.message}
                         </div>
                     </div>
                 `;
             } finally {
                 testBtn.disabled = false;
-                testBtn.innerHTML = '<i class="fas fa-wifi"></i> 测试API连接';
+                testBtn.innerHTML = '<i class="fas fa-wifi"></i> 测试连接';
             }
         }
         
@@ -381,7 +687,7 @@
             // 添加AI思考中消息
             const thinkingDiv = document.createElement('div');
             thinkingDiv.className = 'message ai-message';
-            thinkingDiv.innerHTML = '<span class="typing">思考中...</span>';
+            thinkingDiv.innerHTML = '<span class="typing">思考中，可能需要绘图...</span>';
             chatContainer.appendChild(thinkingDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
             
@@ -394,7 +700,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         messages: chatHistory,
-                        max_tokens: 600,
+                        max_tokens: 800,
                         temperature: 0.7
                     })
                 });
@@ -414,8 +720,10 @@
                 // 移除思考中消息
                 thinkingDiv.remove();
                 
-                // 添加AI回复
+                // 获取AI回复
                 const aiResponse = data.choices[0].message.content;
+                
+                // 添加AI回复
                 addMessage('ai', aiResponse);
                 
                 // 添加到历史
@@ -436,7 +744,7 @@
                                 <i class="fas fa-key"></i>
                                 API 密钥错误
                             </div>
-                            请点击上方"测试API连接"按钮查看详细解决方案。
+                            请点击上方"测试连接"按钮查看详细解决方案。
                         </div>
                     `;
                 }
@@ -451,6 +759,89 @@
             }
         }
         
+        // 初始化图形控制
+        function initGraphControls() {
+            // 重置视图
+            document.getElementById('resetView').addEventListener('click', () => {
+                if (calculator) {
+                    calculator.setMathBounds({
+                        left: -10,
+                        right: 10,
+                        bottom: -10,
+                        top: 10
+                    });
+                }
+            });
+            
+            // 放大
+            document.getElementById('zoomIn').addEventListener('click', () => {
+                if (calculator) {
+                    const bounds = calculator.getMathBounds();
+                    const width = bounds.right - bounds.left;
+                    const height = bounds.top - bounds.bottom;
+                    
+                    calculator.setMathBounds({
+                        left: bounds.left + width * 0.1,
+                        right: bounds.right - width * 0.1,
+                        bottom: bounds.bottom + height * 0.1,
+                        top: bounds.top - height * 0.1
+                    });
+                }
+            });
+            
+            // 缩小
+            document.getElementById('zoomOut').addEventListener('click', () => {
+                if (calculator) {
+                    const bounds = calculator.getMathBounds();
+                    const width = bounds.right - bounds.left;
+                    const height = bounds.top - bounds.bottom;
+                    
+                    calculator.setMathBounds({
+                        left: bounds.left - width * 0.1,
+                        right: bounds.right + width * 0.1,
+                        bottom: bounds.bottom - height * 0.1,
+                        top: bounds.top + height * 0.1
+                    });
+                }
+            });
+            
+            // 网格切换
+            let gridVisible = true;
+            document.getElementById('showGrid').addEventListener('click', function() {
+                if (calculator) {
+                    gridVisible = !gridVisible;
+                    calculator.updateSettings({ grid: gridVisible });
+                    this.classList.toggle('active', gridVisible);
+                }
+            });
+            
+            // 暗色主题切换
+            let darkMode = false;
+            document.getElementById('darkMode').addEventListener('click', function() {
+                if (calculator) {
+                    darkMode = !darkMode;
+                    calculator.updateSettings({
+                        colors: darkMode ? {
+                            grid: '#555555',
+                            background: '#1e1e1e'
+                        } : {
+                            grid: '#cccccc',
+                            background: '#ffffff'
+                        }
+                    });
+                    this.classList.toggle('active', darkMode);
+                }
+            });
+            
+            // 清空图形
+            document.getElementById('clearGraph').addEventListener('click', () => {
+                if (calculator) {
+                    calculator.setExpressions([]);
+                    graphPlaceholder.style.display = 'flex';
+                }
+            });
+        }
+        
         // 事件监听
         sendBtn.addEventListener('click', sendMessage);
         testBtn.addEventListener('click', testConnection);
@@ -462,10 +853,36 @@
             }
         });
         
-        // 页面加载后自动测试连接
+        // 页面加载后初始化
         window.addEventListener('load', () => {
-            console.log('页面加载完成，API URL:', API_URL);
-            setTimeout(testConnection, 500);
+            console.log('数学AI系统加载完成');
+            console.log('Desmos API 状态:', typeof Desmos !== 'undefined' ? '已加载' : '未加载');
+            
+            // 初始化图形控制
+            initGraphControls();
+            
+            // 预加载Desmos（不立即显示）
+            setTimeout(() => {
+                if (typeof Desmos !== 'undefined') {
+                    console.log('Desmos API 可用');
+                }
+            }, 1000);
+            
+            // 示例：显示绘图提示
+            setTimeout(() => {
+                const exampleDiv = document.createElement('div');
+                exampleDiv.className = 'message ai-message';
+                exampleDiv.innerHTML = `
+                    <div class="graph-prompt">
+                        <strong><i class="fas fa-lightbulb"></i> 绘图示例</strong><br>
+                        尝试询问：<br>
+                        <span class="latex-example">"绘制函数 y = x^2 和 y = 2x + 1 的图像，并找到它们的交点"</span><br>
+                        <span class="latex-example">"展示正弦函数 y = sin(x) 在 [0, 2π] 上的图像"</span><br>
+                        <span class="latex-example">"绘制圆 x^2 + y^2 = 4 的图像"</span>
+                    </div>
+                `;
+                chatContainer.appendChild(exampleDiv);
+            }, 2000);
         });
     </script>
 </body>
